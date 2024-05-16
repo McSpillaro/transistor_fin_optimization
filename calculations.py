@@ -23,3 +23,12 @@ k1 = 206 # (W/m*C) thermal conductivity @ 100 celsius
 mk = (k1-k0) / (kT1-kT0) # slope of the interpolation function
 k = mk*(T0-kT0) + k0 # (W/m*C) FINAL THERMAL CONDUCTIVY AT 85 CELSIUS
 
+# m-PARAMETER
+L = 1 # (m) initiailzing the length of the pin fin
+D = 1 # (m) initializing the diamter of the pin fin
+r = D/2 # radius of the pin fin
+P = D*m.pi # perimeter (AKA: circumference) of pin fin
+Ac = m.pi*r**2 # cross-sectional area of the pin fin
+numerator = h*P # numerator specific to the m-parameter
+denominator = k*Ac
+m = m.sqrt(numerator/denominator)
