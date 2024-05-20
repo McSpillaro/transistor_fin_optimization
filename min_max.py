@@ -31,4 +31,6 @@ P = D*m.pi # perimeter (AKA: circumference) of pin fin
 Ac = m.pi*r**2 # cross-sectional area of the pin fin
 numerator = h*P # numerator specific to the m-parameter
 denominator = k*Ac
-m = m.sqrt(numerator/denominator)
+m = m.sqrt(numerator/denominator) # m-PARAMETER
+
+# MIN-MAX FUNCTION
