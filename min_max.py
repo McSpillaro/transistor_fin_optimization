@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.optimize import minimize
 import math
 import json
 
@@ -56,8 +57,8 @@ k = slope*(Tw-fin_constants['thermal_temp0']) + fin_constants['thermal_conductiv
 # INITIALING UNKNOWN PARAMETERS
 # --------------------------------------------------------------------------------------------
 
-diameter = 1 # (m) diameter of the fin
-length = 1 # (m) length of the fin
+diameter = 1E-10 # (m) diameter of the fin
+length = 1E-10 # (m) length of the fin
 num_of_fins = 1 # number of fins total
 
 # To make things easier, grouping variables together to make equation less long
@@ -83,4 +84,34 @@ def Q(N,D,L): # total heat loss -> just defiing the function
     
     q_fin = A * (B/C)
     
-    return q_bare + (N*q_fin)
+    return N*(q_bare + q_fin)
+
+# Wrapper function to pass the variables N, D, and L as a single arg
+def objective_function(ID):
+    N, D, L = ID
+    return mass(N, D, L)
+
+# Wrapper function for the constraint
+def constraint_equation(ID):
+    N, D, L = ID
+    total_heat_loss = q
+    return Q(N, D, L) - total_heat_loss
+
+# Setting up the constraint dictionary for the minimize function
+constraints = {'type': 'eq', 'fun': lambda ID: constraint_equation(ID)}
+
+# Initial guess for the independent variables [N, D, L]
+initial_guess = [1, 1, 1]
+
+# Bounds for the variables (e.g., N, D, L should be positive)
+bounds = [(1, None), (1E-5, None), (1E-5, None)]
+
+# Perform the optimization
+result = minimize(objective_function, initial_guess, constraints=constraints, bounds=bounds, method='SLSQP')
+
+# Print the result
+if result.success:
+    print(f'Minimum value of mass: {result.fun}')
+    print(f'Optimal values of N, D, and L: {result.x}')
+else:
+    print('Optimization failed:', result.message)
