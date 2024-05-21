@@ -1,36 +1,86 @@
-import math as m
 import numpy as np
+import math
+import json
+
+# --------------------------------------------------------------------------------------------
+# FILE HANDLING
+# --------------------------------------------------------------------------------------------
+
+# Opening JSON files
+with open('data.json') as f:
+    data = json.load(f)
+    
+# Organizing sets of data
+transistor_details_RAW = data['transistor_details']
+fin_constants_RAW = data['fin_constants']
+system_details_RAW = data['system_details']
+
+# Initializing the dictionaries
+transistor_details = {}
+fin_constants = {}
+system_details = {}
+
+# Details of the data sets for use
+for detail in transistor_details_RAW:
+    transistor_details.update(detail)
+for detail in fin_constants_RAW:
+    fin_constants.update(detail)
+for detail in system_details_RAW:
+    system_details.update(detail)
+
+# --------------------------------------------------------------------------------------------
+# DEFINING KNOWN SYSTEM VARIABLES
+# --------------------------------------------------------------------------------------------
 
 # DIMENSIONS OF THE TRANSISTOR SURFACE
 conversion = 1E-3 # conversion from milimeters to meters
-H = 50*conversion # (m) height of the transistor
-W = 100*conversion # (m) width of the transistor
+H = transistor_details['height']*conversion # (m) height of the transistor
+W = transistor_details['width']*conversion # (m) width of the transistor
 
 # SYSTEM PARAMETERS
-q = 50 # (W) heat loss of the system 
-T0 = 85 # (Celsius) top surface temperature that must be maintained
-T1 = 30 # (Celsius) surroudning environment temperature
+density = fin_constants['density'] # density of the fin in kg/m3
+overdesign_constraint = 0.2 # percent overdesign taken into account
+q = system_details['total_heat_loss']*overdesign_constraint # (W) heat loss of the system 
+Tw = system_details['surface_temp'] # (Celsius) top surface temperature that must be maintained
+T_inf = system_details['environment_temp'] # (Celsius) surroudning environment temperature
 
 # HEAT TRANSFER COEFFICIENT
-h = 15 # (W/m^2*C) film heat transfer coefficient
+h = system_details['film_heat_transfer_coefficient'] # (W/m^2*C) film heat transfer coefficient
 
 # THERMCAL CONDUCTIVITY
 # Interpolating for the proepr k-value of aluminum at 85 celsius
-kT0 = 0 # (Celsius) temperature used for k0 in Appendix A.2
-kT1 = 100 # (Celsius) temperature used for k1 in Appendix A.2
-k0 = 202 # (W/m*C) thermal conducitivy @ 0 celsius
-k1 = 206 # (W/m*C) thermal conductivity @ 100 celsius
-mk = (k1-k0) / (kT1-kT0) # slope of the interpolation function
-k = mk*(T0-kT0) + k0 # (W/m*C) FINAL THERMAL CONDUCTIVY AT 85 CELSIUS
+slope = (fin_constants['thermal_conductivity@100']-fin_constants['thermal_conductivity@0']) / (fin_constants['thermal_temp100'] - fin_constants['thermal_temp0'])
+k = slope*(Tw-fin_constants['thermal_temp0']) + fin_constants['thermal_conductivity@0'] # (W/m*C) FINAL THERMAL CONDUCTIVY AT 85 CELSIUS
 
-# m-PARAMETER
-L = 1 # (m) initiailzing the length of the pin fin
-D = 1 # (m) initializing the diamter of the pin fin
-r = D/2 # radius of the pin fin
-P = D*m.pi # perimeter (AKA: circumference) of pin fin
-Ac = m.pi*r**2 # cross-sectional area of the pin fin
-numerator = h*P # numerator specific to the m-parameter
-denominator = k*Ac
-m = m.sqrt(numerator/denominator) # m-PARAMETER
+# --------------------------------------------------------------------------------------------
+# INITIALING UNKNOWN PARAMETERS
+# --------------------------------------------------------------------------------------------
 
-# MIN-MAX FUNCTION
+diameter = 1 # (m) diameter of the fin
+length = 1 # (m) length of the fin
+num_of_fins = 1 # number of fins total
+
+# To make things easier, grouping variables together to make equation less long
+pi = math.pi # just to shorten it so we don't have to type out the 'math' part
+m = math.sqrt((4*h)/(diameter*k)) # m-parameter
+dt = Tw - T_inf # (Celsius) temperature difference between surface and environment
+
+# --------------------------------------------------------------------------------------------
+# MIN-MAX CALCULATION
+# --------------------------------------------------------------------------------------------
+
+# The goal is to minimize the total mass
+def mass(N,D,L): # the mass of the fins in total
+    return N * (density * L * (2*pi * (D**2 / 4)))
+
+# The gaols is to ensure this function is equal to the total heat-loss
+def Q(N,D,L): # total heat loss -> just defiing the function
+    q_bare = h * pi * (D**2 / 4) * dt
+    
+    A = h * pi**2 * k * (D**3/4) * dt
+    B = math.sinh(m*L) + (h / (m*k))*math.cosh(m*L)
+    C = math.cosh(m*L) + (h / (m*k))*math.sinh(m*L)
+    
+    q_fin = A * (B/C)
+    
+    return q_bare + (N*q_fin)

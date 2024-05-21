@@ -4,5 +4,24 @@
       "height": 50,
       "width": 100
     }
+  ],
+
+  "fin_constants": [
+    {
+      "density": 2710,
+      "thermal_temp0": 0,
+      "thermal_temp100": 100,
+      "thermal_conductivity@0": 202,
+      "thermal_conductivity@100": 206
+    }
+  ],
+
+  "system_details": [
+    {
+      "surface_temp": 85,
+      "environment_temp": 30,
+      "film_heat_transfer_coefficient": 15,
+      "total_heat_loss": 50
+    }
   ]
 }
