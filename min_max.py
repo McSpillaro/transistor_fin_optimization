@@ -58,18 +58,18 @@ m = np.sqrt((4*h)/(diameter*k)) # m-parameter
 dt = Tw - T_inf # (Celsius) temperature difference between surface and environment
 
 #%% MIN-MAX CALCULATION
-# The goal is to minimize the total mass
+# The goal is to MINIMIZE the total mass
 def mass(N, D, L): # total mass of the fin
     return N * (density * L * (2 * np.pi * (D**2 / 4)))
 
-def Q_bare(N, D):
+def Q_bare(N, D): # defining the bare surface heat loss function
     A_b = transistor_details['height']*transistor_details['width'] # area of the bare surface
     A_cf = pi*(D**2 / 4) # cross-sectional area of 1 fin taking up the space of the transistor surface
     A_s = A_b - N*A_cf # total surface area of the transistor exposed
     
     return h * A_s  * dt # heat lost by surface as a func. of fin dimensions
 
-def Q_fin(D, L):
+def Q_fin(D, L): # defining the pin fin heat loss function
     mL = m * L # defining mL for simplification
     # threshold for correcting overflow error - approximation of hyperbolic trig. func.
     if mL > 700:
@@ -92,13 +92,15 @@ def Q_fin(D, L):
     
     return coefficient * (numerator / denominator) # heat lost by a single fin    
 
+# this is the TOTAL heat loss as a func. of pin fin dimensions : CONSTRAINT
 def Q_total(N, D, L): # the total heat lost from the system: both bare and fin
     q_bare = Q_bare(N, D) # heat lost by transistor surface as a func. of fin dimensions
     q_fin = Q_fin(D, L) # heat lost by a single pin fin
     
-    return 
+    return q_bare + (N * q_fin)
 
-def R(N, D, L):
+# fin effectivness which is what we want to MAXIMIZE
+def fin_effectiveness(N, D, L):
     mL = m * L
     
     if mL > 700:
@@ -110,11 +112,11 @@ def R(N, D, L):
     
     return tanh_mL / m
 
-def objective_function(ID):
+def objective_function(ID): # what is to be MIN-MAX
     N, D, L = ID
-    return mass(N, D, L) - R(N, D, L)
+    return mass(N, D, L) - fin_effectiveness(N, D, L)
 
-def constraint_equation(ID):
+def constraint_equation(ID): # the CONSTRAINT
     N, D, L = ID
     return Q_total(N, D, L) - q
 
