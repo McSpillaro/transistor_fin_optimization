@@ -63,13 +63,23 @@ def mass(N, D, L): # total mass of the fin
     return N * (density * L * (2 * np.pi * (D**2 / 4)))
 
 def Q_bare(N, D):
-    A_b = transistor_details['height']*transistor_details['width'] # area of the bare surface
-    A_cf = pi*(D**2 / 4) # cross-sectional area of 1 fin taking up the space of the transistor surface
-    A_s = A_b - N*A_cf # total surface area of the transistor exposed
+
     
     return h * A_s  * dt # heat lost by surface as a func. of fin dimensions
 
 def Q_fin(D, L):
+
+    
+
+    
+    return  
+
+def Q_total(N, D, L): # the total heat lost from the system: both bare and fin
+    A_b = transistor_details['height']*transistor_details['width'] # area of the bare surface
+    A_cf = pi*(D**2 / 4) # cross-sectional area of 1 fin taking up the space of the transistor surface
+    A_s = A_b - N*A_cf # total surface area of the transistor exposed
+    q_bare = h * A_s  * dt # heat lost by surface as a func. of fin dimensions
+    
     mL = m * L # defining mL for simplification
     # threshold for correcting overflow error - approximation of hyperbolic trig. func.
     if mL > 700:
@@ -84,19 +94,13 @@ def Q_fin(D, L):
     
     P = D * pi # perimeter of the pin fin (cylindrical)
     A_f = P * L # surface area of the pin fin (cylindrical)
-    
     # spreading out the equation for heat lost by fin for coding simplification
     numerator = sinh_mL + (h / (m * k)) * cosh_mL
     denominator = cosh_mL + (h / (m * k)) * sinh_mL
     coefficient = h * P * k * A_f * dt
+    q_fin = coefficient * (numerator / denominator) # heat lost by a single fin   
     
-    return coefficient * (numerator / denominator) # heat lost by a single fin    
-
-def Q_total(N, D, L): # the total heat lost from the system: both bare and fin
-    q_bare = Q_bare(N, D) # heat lost by transistor surface as a func. of fin dimensions
-    q_fin = Q_fin(D, L) # heat lost by a single pin fin
-    
-    return 
+    return q_bare - N*q_fin
 
 def R(N, D, L):
     mL = m * L
