@@ -1,7 +1,6 @@
 #%% IMPORTS
 import numpy as np
 from scipy.optimize import minimize
-import math
 import json
 
 #%% FILE HANDLING
@@ -54,8 +53,8 @@ length = 1E-10 # (m) length of the fin
 num_of_fins = 1 # number of fins total
 
 # To make things easier, grouping variables together to make equation less long
-pi = math.pi # just to shorten it so we don't have to type out the 'math' part
-m = math.sqrt((4*h)/(diameter*k)) # m-parameter
+pi = np.pi # just to shorten it so we don't have to type out the 'math' part
+m = np.sqrt((4*h)/(diameter*k)) # m-parameter
 dt = Tw - T_inf # (Celsius) temperature difference between surface and environment
 
 #%% MIN-MAX CALCULATION
@@ -67,18 +66,31 @@ def mass(N,D,L): # the mass of the fins in total
 def Q(N,D,L): # total heat loss -> just defiing the function
     q_bare = h * pi * (D**2 / 4) * dt
     
-    A = h * pi**2 * k * (D**3/4) * dt
-    B = math.sinh(m*L) + (h / (m*k))*math.cosh(m*L)
-    C = math.cosh(m*L) + (h / (m*k))*math.sinh(m*L)
+    # Defining the mL parameter in the functions for equating
+    mL = m * L
+    
+    if mL > 1:  # Threshold to avoid overflow
+        sinh_mL = 0.5 * np.exp(mL)
+        cosh_mL = 0.5 * np.exp(mL)
+    else:
+        sinh_mL = np.sinh(mL)
+        cosh_mL = np.cosh(mL)
+    
+    A = h * np.pi**2 * k * (D**3 / 4) * dt
+    B = sinh_mL + (h / (m * k)) * cosh_mL
+    C = cosh_mL + (h / (m * k)) * sinh_mL
     
     q_fin = A * (B/C)
     
     return N*(q_bare + q_fin)
 
+def R(N, D, L):
+    return np.tanh(m*L)/m
+
 # Wrapper function to pass the variables N, D, and L as a single arg
 def objective_function(ID):
     N, D, L = ID
-    return mass(N, D, L)
+    return mass(N, D, L) - R(N, D, L)
 
 # Wrapper function for the constraint
 def constraint_equation(ID):
