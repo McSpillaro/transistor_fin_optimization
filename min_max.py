@@ -28,6 +28,7 @@ for detail in system_details_RAW:
 
 #%% DEFINING KNOWN SYSTEM VARIABLES
 # DIMENSIONS OF THE TRANSISTOR SURFACE
+pi = np.pi # just to shorten it so we don't have to type out the 'np' part
 conversion = 1E-3 # conversion from milimeters to meters
 H = transistor_details['height']*conversion # (m) height of the transistor
 W = transistor_details['width']*conversion # (m) width of the transistor
@@ -53,66 +54,71 @@ length = 1E-10 # (m) length of the fin
 num_of_fins = 1 # number of fins total
 
 # To make things easier, grouping variables together to make equation less long
-pi = np.pi # just to shorten it so we don't have to type out the 'math' part
 m = np.sqrt((4*h)/(diameter*k)) # m-parameter
 dt = Tw - T_inf # (Celsius) temperature difference between surface and environment
 
 #%% MIN-MAX CALCULATION
 # The goal is to minimize the total mass
-def mass(N,D,L): # the mass of the fins in total
-    return N * (density * L * (2*pi * (D**2 / 4)))
+def mass(N, D, L): # total mass of the fin
+    return N * (density * L * (2 * np.pi * (D**2 / 4)))
 
-# The gaols is to ensure this function is equal to the total heat-loss
-def Q(N,D,L): # total heat loss -> just defiing the function
-    q_bare = h * pi * (D**2 / 4) * dt
+def Q(N, D, L): # the total heat lost from the system: both bare and fin
+    A_b = transistor_details['height']*transistor_details['width'] # area of the bare surface
+    A_cf = pi*(D**2 / 4) # cross-sectional area of 1 fin taking up the space of the transistor surface
+    A_s = A_b - N*A_cf # total surface area of the transistor exposed
     
-    # Defining the mL parameter in the functions for equating
-    mL = m * L
+    q_bare =  h * A_s * dt # heat lost by surface as a func. of fin dimensions
+    mL = m * L # defining mL for simplification
     
-    if mL > 1:  # Threshold to avoid overflow
+    # Boundary/Threshold for correcting overflow error - approximation of hyperbolic trig. func.
+    if mL > 700:
         sinh_mL = 0.5 * np.exp(mL)
         cosh_mL = 0.5 * np.exp(mL)
+    elif mL < -700:
+        sinh_mL = -0.5 * np.exp(-mL)
+        cosh_mL = 0.5 * np.exp(-mL)
     else:
         sinh_mL = np.sinh(mL)
         cosh_mL = np.cosh(mL)
+
+    A = h * np.pi**2 * k * (D**3 / 4) * dt # parameter to calc. q_fin (makes it easier)
+    B = sinh_mL + (h / (m * k)) * cosh_mL # parameter to calc. q_fin (makes it easier)
+    C = cosh_mL + (h / (m * k)) * sinh_mL # parameter to calc. q_fin (makes it easier)
     
-    A = h * np.pi**2 * k * (D**3 / 4) * dt
-    B = sinh_mL + (h / (m * k)) * cosh_mL
-    C = cosh_mL + (h / (m * k)) * sinh_mL
+    q_fin = A * (B / C) # heat lost of the fin only as a func. of fin dimensions
     
-    q_fin = A * (B/C)
-    
-    return N*(q_bare + q_fin)
+    return N * (q_bare + q_fin)
 
 def R(N, D, L):
-    return np.tanh(m*L)/m
+    mL = m * L
+    
+    if mL > 700:
+        tanh_mL = 1
+    elif mL < -700:
+        tanh_mL = -1
+    else:
+        tanh_mL = np.tanh(mL)
+    
+    return tanh_mL / m
 
-# Wrapper function to pass the variables N, D, and L as a single arg
 def objective_function(ID):
     N, D, L = ID
     return mass(N, D, L) - R(N, D, L)
 
-# Wrapper function for the constraint
 def constraint_equation(ID):
     N, D, L = ID
-    total_heat_loss = q
-    return Q(N, D, L) - total_heat_loss
+    return Q(N, D, L) - q
 
-# Setting up the constraint dictionary for the minimize function
 constraints = {'type': 'eq', 'fun': lambda ID: constraint_equation(ID)}
 
-# Initial guess for the independent variables [N, D, L]
-initial_guess = [1, 1, 1]
+initial_guess = [1, 0.01, 0.01]
 
-# Bounds for the variables (e.g., N, D, L should be positive)
-bounds = [(1, None), (1E-5, None), (1E-5, None)]
+bounds = [(0, None), (1E-5, None), (1E-5, None)]
 
-# Perform the optimization
 result = minimize(objective_function, initial_guess, constraints=constraints, bounds=bounds, method='SLSQP')
 
-# Print the result
 if result.success:
-    print(f'Minimum value of mass: {result.fun}')
+    print(f'Minimum value of mass - R: {result.fun}')
     print(f'Optimal values of N, D, and L: {result.x}')
 else:
     print('Optimization failed:', result.message)
