@@ -1,12 +1,10 @@
+#%% IMPORTS
 import numpy as np
 from scipy.optimize import minimize
 import math
 import json
 
-# --------------------------------------------------------------------------------------------
-# FILE HANDLING
-# --------------------------------------------------------------------------------------------
-
+#%% FILE HANDLING
 # Opening JSON files
 with open('data.json') as f:
     data = json.load(f)
@@ -29,10 +27,7 @@ for detail in fin_constants_RAW:
 for detail in system_details_RAW:
     system_details.update(detail)
 
-# --------------------------------------------------------------------------------------------
-# DEFINING KNOWN SYSTEM VARIABLES
-# --------------------------------------------------------------------------------------------
-
+#%% DEFINING KNOWN SYSTEM VARIABLES
 # DIMENSIONS OF THE TRANSISTOR SURFACE
 conversion = 1E-3 # conversion from milimeters to meters
 H = transistor_details['height']*conversion # (m) height of the transistor
@@ -53,10 +48,7 @@ h = system_details['film_heat_transfer_coefficient'] # (W/m^2*C) film heat trans
 slope = (fin_constants['thermal_conductivity@100']-fin_constants['thermal_conductivity@0']) / (fin_constants['thermal_temp100'] - fin_constants['thermal_temp0'])
 k = slope*(Tw-fin_constants['thermal_temp0']) + fin_constants['thermal_conductivity@0'] # (W/m*C) FINAL THERMAL CONDUCTIVY AT 85 CELSIUS
 
-# --------------------------------------------------------------------------------------------
-# INITIALING UNKNOWN PARAMETERS
-# --------------------------------------------------------------------------------------------
-
+#%% INITIALING UNKNOWN PARAMETERS
 diameter = 1E-10 # (m) diameter of the fin
 length = 1E-10 # (m) length of the fin
 num_of_fins = 1 # number of fins total
@@ -66,10 +58,7 @@ pi = math.pi # just to shorten it so we don't have to type out the 'math' part
 m = math.sqrt((4*h)/(diameter*k)) # m-parameter
 dt = Tw - T_inf # (Celsius) temperature difference between surface and environment
 
-# --------------------------------------------------------------------------------------------
-# MIN-MAX CALCULATION
-# --------------------------------------------------------------------------------------------
-
+#%% MIN-MAX CALCULATION
 # The goal is to minimize the total mass
 def mass(N,D,L): # the mass of the fins in total
     return N * (density * L * (2*pi * (D**2 / 4)))
