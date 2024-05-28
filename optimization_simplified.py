@@ -103,42 +103,43 @@ def mass_constraint(ID):
     logging.debug(f'Mass constraint value: {m_value} for N={N}, D={D}, L={L}')
     return m_value - 1E-10  # ensure mass is greater than a small positive value
 
-# fins must be no longer than 1 cm
-def length_constraint(ID):
-    N, D, L = ID
-    return 0.01 - L  # ensure length is less than or equal to 0.01 meters (1 cm)
-
 # constraints for the optimization to ensure valid results based on desires
-constraints = [
-    {'type': 'eq', 'fun': constraint_equation}, # q_total (calculated) approx. = q (defined)
-    {'type': 'ineq', 'fun': mass_constraint}, # mass must be : 0 < mass
-    {'type': 'ineq', 'fun': length_constraint} # length mus be : 0 < length < 1 cm
-]
+def optimize(nMAX, dMAX, lMAX):
+    results = [] # initialize results list
+    constraints = [
+        {'type': 'eq', 'fun': constraint_equation}, # q_total (calculated) approx. = q (defined)
+        {'type': 'ineq', 'fun': mass_constraint}, # mass must be : 0 < mass
+    ]
 
-initial_guess = [1, 0.01, 0.01] # initial guess values for [N, D, L]
-bounds = [(1, 100), (1E-5, None), (1E-5, 0.01)] # defined boundaries for [N, D, L]
+    initial_guess = [1, 0.01, 0.01] # initial guess values for [N, D, L]
+    # defined boundaries for [N, D, L]
+    bounds = [(1, nMAX), # number of fin boundaries
+            (1E-5, dMAX), # boundary for diameter
+            (1E-5, lMAX)] # boundary for length
 
-best_result = None # initializing the best result
-best_objective_value = float('inf') # initializing the best values
+    best_result = None # initializing the best result
+    best_objective_value = float('inf') # initializing the best values
 
-for N in range(1, 101): # loops through tested ranges of number of fins to optimize dimensions
-    logging.info(f'Trying N = {N}') # logging
-    result = minimize(objective_function, # function to optimize
-                      [N, initial_guess[1], initial_guess[2]], # guesses to go into objective func. 
-                      constraints=constraints, bounds=bounds,
-                      method='SLSQP') # method of optimization
-    if result.success and result.fun < best_objective_value: # defines best values
-        best_result = result
-        best_objective_value = result.fun
+    for N in range(1, 101): # loops through tested ranges of number of fins to optimize dimensions
+        logging.info(f'Trying N = {N}') # logging
+        result = minimize(objective_function, # function to optimize
+                        [N, initial_guess[1], initial_guess[2]], # guesses to go into objective func. 
+                        constraints=constraints, bounds=bounds,
+                        method='SLSQP') # method of optimization
+        if result.success and result.fun < best_objective_value: # defines best values
+            best_result = result
+            best_objective_value = result.fun
 
-# logging and outputing results
-if best_result:
-    logging.info(f'Minimum value of mass: {best_result.fun}')
-    logging.info(f'Optimal values of N, D, and L: {best_result.x}')
-    print('\n')
-    print(f'Minimum value of mass: {best_result.fun}')
-    print(f'Optimal values of N, D, and L: {best_result.x}')
-    print('\n')
-else:
-    logging.error('Optimization failed: No feasible solution found')
-    print('Optimization failed: No feasible solution found')
+    # logging and outputing results
+    if best_result:
+        logging.info(f'Minimum value of mass: {best_result.fun}')
+        logging.info(f'Optimal values of N, D, and L: {best_result.x}')
+        results.append(f'Minimum value of mass: {round(best_result.fun*1000, 3)} grams')
+        results.append(f'Optimal values of N, D, and L: {best_result.x} -> [# Fins | Diameter (m) | Length (m)]')
+    else:
+        logging.error('Optimization failed: No feasible solution found')
+        print('Optimization failed: No feasible solution found')
+        
+    return print(f"\n{results[0]}\n{results[1]}\n")
+
+optimize(100, None, 0.0078)
