@@ -6,10 +6,11 @@ import logging
 from logging_config import setup_logging
 
 #%% LOGGING SETUP
+CASE = 2
 log_file = setup_logging()
 logging.basicConfig(level=logging.INFO, filename=log_file)
 logging.info("Optimization process started.")
-
+logging.info(f"CASE: {CASE}")
 #%% FILE HANDLING
 # Opening JSON files
 with open('data.json') as f:
@@ -53,7 +54,10 @@ def Q_bare(N, D): # calculates the heat loss of the
     return h * A_s * dt
 
 def Q_fin(D, L): # the heat loss of only one fin
-    m = np.sqrt((4 * h) / (D * k)) # m-value
+    P = D * pi # perimeter of the fin
+    A_f = P * L # surface area of the fin
+    
+    m = np.sqrt((h * P) / (k * A_f)) # m-value
     mL = m * L # simplification of m * L for ease of typing
     
     # threshold for correcting overflow error - approximation of hyperbolic trig. func.
@@ -67,8 +71,6 @@ def Q_fin(D, L): # the heat loss of only one fin
         sinh_mL = np.sinh(mL)
         cosh_mL = np.cosh(mL)
         
-    P = D * pi # perimeter of the fin
-    A_f = P * L # surface area of the fin
     numerator = sinh_mL + (h / (m * k)) * cosh_mL
     denominator = cosh_mL + (h / (m * k)) * sinh_mL
     coefficient = h * P * k * A_f * dt
@@ -81,7 +83,10 @@ def Q_total(N, D, L): # total heat loss of the fin and device together
 
 #%% OPTIMIZATION FUNCTIONS
 def fin_effectiveness(N, D, L): # how effective the fin actually is
-    m = np.sqrt((4 * h) / (D * k))
+    P = D * pi # perimeter of the fin
+    A_f = P * L # surface area of the fin
+    
+    m = np.sqrt((h * P) / (k * A_f)) # m-value
     mL = m * L
     if mL > 700:
         tanh_mL = 1
@@ -90,9 +95,8 @@ def fin_effectiveness(N, D, L): # how effective the fin actually is
     else:
         tanh_mL = np.tanh(mL)
         
-    # comment either return value out to bug fix things
-    # return tanh_mL
-    return tanh_mL / mL
+    return tanh_mL
+    # return tanh_mL / m
 
 def objective_function(ID): # function to optimize mass and fin effectiveness
     N, D, L = ID
