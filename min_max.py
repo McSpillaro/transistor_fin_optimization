@@ -2,6 +2,12 @@
 import numpy as np
 from scipy.optimize import minimize
 import json
+import logging
+from logging_config import setup_logging
+
+#%% LOGGING SETUP
+log_file = setup_logging()
+logging.info("Optimzation process started.")
 
 #%% FILE HANDLING
 # Opening JSON files
@@ -58,7 +64,6 @@ def Q_bare(N, D): # defining the bare surface heat loss function
     A_b = transistor_details['height']*transistor_details['width'] # area of the bare surface
     A_cf = pi*(D**2 / 4) # cross-sectional area of 1 fin taking up the space of the transistor surface
     A_s = A_b - N*A_cf # total surface area of the transistor exposed
-    
     return h * A_s  * dt # heat lost by surface as a func. of fin dimensions
 
 def Q_fin(D, L): # defining the pin fin heat loss function
@@ -78,7 +83,6 @@ def Q_fin(D, L): # defining the pin fin heat loss function
     
     P = D * pi # perimeter of the pin fin (cylindrical)
     A_f = P * L # surface area of the pin fin (cylindrical)
-    
     # spreading out the equation for heat lost by fin for coding simplification
     numerator = sinh_mL + (h / (m * k)) * cosh_mL
     denominator = cosh_mL + (h / (m * k)) * sinh_mL
@@ -107,25 +111,67 @@ def fin_effectiveness(N, D, L):
         tanh_mL = np.tanh(mL)
     
     return tanh_mL / m
+# upper-bound for fin effectivness defining 100% effectiveness constraint
+def fin_effectiveness_upper(ID):
+    N, D, L = ID
+    effectiveness_value = fin_effectiveness(N, D, L)
+    logging.info(f'Fin Effectiveness Upper Constraint - N: {N}, D: {D}, L: {L}, Value: {effectiveness_value}')
+    return 2 - effectiveness_value
+
+# lower-bound for fin effectiveness defining 0% effectivness constraint
+def fin_effectiveness_lower(ID):
+    N, D, L = ID
+    effectiveness_value = fin_effectiveness(N, D, L)
+    logging.info(f'Fin Effectiveness Lower Constraint - N: {N}, D: {D}, L: {L}, Value: {effectiveness_value}')
+    return effectiveness_value - 1
 
 def objective_function(ID): # what is to be MIN-MAX
     N, D, L = ID
-    return mass(N, D, L) - fin_effectiveness(N, D, L) # a max fin_effectiveness will minimize mass
+    objective_value = mass(N, D, L) - fin_effectiveness(N, D, L) # a max fin_effectiveness will minimize mass
+    
+    # logging the objective value results
+    logging.info(f'Objective Function - N: {N}, D: {D}, L: {L}, Value: {objective_value}')
+    return objective_value
 
 def constraint_equation(ID): # the CONSTRAINT
     N, D, L = ID
-    return Q_total(N, D, L) - q # must always = 0 to ensure Q_total always = q
+    constraint_value = Q_total(N, D, L) - q # must always = 0 to ensure Q_total always = q
 
-constraints = {'type': 'eq', 'fun': lambda ID: constraint_equation(ID)}
+    # logging the constraint value results
+    logging.info(f'Constraint Equation - N: {N}, D: {D}, L: {L}, Value: {constraint_value}')
+    return constraint_value
+
+# constraints for the functions to maintain reasonable results
+constraints = [
+    {'type': 'eq', 'fun': lambda ID: constraint_equation(ID)},
+    {'type': 'ineq', 'fun': lambda ID: fin_effectiveness_upper(ID)},
+    {'type': 'ineq', 'fun': lambda ID: fin_effectiveness_lower(ID)}
+]
 
 initial_guess = [1, 0.01, 0.01]
 
 bounds = [(0, None), (1E-5, None), (1E-5, None)]
 
-result = minimize(objective_function, initial_guess, constraints=constraints, bounds=bounds, method='SLSQP')
+# Initializing the vars for storing the best results based on optimization
+best_result = None
+best_objective_value = float('inf')
 
-if result.success:
-    print(f'Minimum value of mass - R: {result.fun}')
-    print(f'Optimal values of N, D, and L: {result.x}')
+# Loop over a range of integer values for N
+for N in range(1, 101):  # Assuming a reasonable upper limit for N
+    logging.info(f'Trying N = {N}')
+    
+    result = minimize(objective_function, [N, initial_guess[1], initial_guess[2]], 
+                      constraints=constraints, bounds=bounds, method='SLSQP')
+    
+    if result.success and result.fun < best_objective_value:
+        best_result = result
+        best_objective_value = result.fun
+
+if best_result:
+    logging.info(f'Minimum value of mass - R: {best_result.fun}')
+    logging.info(f'Optimal values of N, D, and L: {best_result.x}')
+    print(f'Minimum value of mass - R: {best_result.fun}')
+    print(f'Optimal values of N, D, and L: {best_result.x}')
 else:
-    print('Optimization failed:', result.message)
+    logging.error('Optimization failed: No feasible solution found')
+    print('Optimization failed: No feasible solution found')
