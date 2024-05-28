@@ -8,7 +8,7 @@
 
   "fin_constants": [
     {
-      "density": 2710,
+      "density": 2707,
       "thermal_temp0": 0,
       "thermal_temp100": 100,
       "thermal_conductivity@0": 202,

@@ -110,7 +110,8 @@ def fin_effectiveness(N, D, L):
     else:
         tanh_mL = np.tanh(mL)
     
-    return tanh_mL / m
+    return tanh_mL
+
 # upper-bound for fin effectivness defining 100% effectiveness constraint
 def fin_effectiveness_upper(ID):
     N, D, L = ID
@@ -143,13 +144,14 @@ def constraint_equation(ID): # the CONSTRAINT
 
 # constraints for the functions to maintain reasonable results
 constraints = [
-    {'type': 'eq', 'fun': lambda ID: constraint_equation(ID)},
-    {'type': 'ineq', 'fun': lambda ID: fin_effectiveness_upper(ID)},
-    {'type': 'ineq', 'fun': lambda ID: fin_effectiveness_lower(ID)}
+    {'type': 'eq', 'fun': lambda ID: constraint_equation(ID)}
+    # {'type': 'ineq', 'fun': lambda ID: fin_effectiveness_upper(ID)},
+    # {'type': 'ineq', 'fun': lambda ID: fin_effectiveness_lower(ID)}
 ]
 
+# Initial guesses for [N, D, L]
 initial_guess = [1, 0.01, 0.01]
-
+# Boundary conditions for [N, D, L]
 bounds = [(0, None), (1E-5, None), (1E-5, None)]
 
 # Initializing the vars for storing the best results based on optimization
@@ -159,14 +161,17 @@ best_objective_value = float('inf')
 # Loop over a range of integer values for N
 for N in range(1, 101):  # Assuming a reasonable upper limit for N
     logging.info(f'Trying N = {N}')
-    
-    result = minimize(objective_function, [N, initial_guess[1], initial_guess[2]], 
-                      constraints=constraints, bounds=bounds, method='SLSQP')
-    
+    # THE ACTUAL FUNCTION FOR MINIMIZING ALL FUNCTIONS DEFINED ABOVE
+    result = minimize(objective_function, # function to optimize 
+                      [N, initial_guess[1], initial_guess[2]], # initial guesses
+                      constraints=constraints, bounds=bounds, 
+                      method='SLSQP') # method for optimization
+    # Checks for the best valid result
     if result.success and result.fun < best_objective_value:
         best_result = result
         best_objective_value = result.fun
 
+# Logs results and prints the best result to the terminal
 if best_result:
     logging.info(f'Minimum value of mass - R: {best_result.fun}')
     logging.info(f'Optimal values of N, D, and L: {best_result.x}')
