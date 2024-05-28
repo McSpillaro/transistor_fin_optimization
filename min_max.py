@@ -39,6 +39,7 @@ overdesign_constraint = 0.2 # percent overdesign taken into account
 q = system_details['total_heat_loss']*overdesign_constraint # (W) heat loss of the system 
 Tw = system_details['surface_temp'] # (Celsius) top surface temperature that must be maintained
 T_inf = system_details['environment_temp'] # (Celsius) surroudning environment temperature
+dt = Tw - T_inf # (Celsius) temperature difference between surface and environment
 
 # HEAT TRANSFER COEFFICIENT
 h = system_details['film_heat_transfer_coefficient'] # (W/m^2*C) film heat transfer coefficient
@@ -47,15 +48,6 @@ h = system_details['film_heat_transfer_coefficient'] # (W/m^2*C) film heat trans
 # Interpolating for the proepr k-value of aluminum at 85 celsius
 slope = (fin_constants['thermal_conductivity@100']-fin_constants['thermal_conductivity@0']) / (fin_constants['thermal_temp100'] - fin_constants['thermal_temp0'])
 k = slope*(Tw-fin_constants['thermal_temp0']) + fin_constants['thermal_conductivity@0'] # (W/m*C) FINAL THERMAL CONDUCTIVY AT 85 CELSIUS
-
-#%% INITIALING UNKNOWN PARAMETERS
-diameter = 1E-10 # (m) diameter of the fin
-length = 1E-10 # (m) length of the fin
-num_of_fins = 1 # number of fins total
-
-# To make things easier, grouping variables together to make equation less long
-m = np.sqrt((4*h)/(diameter*k)) # m-parameter
-dt = Tw - T_inf # (Celsius) temperature difference between surface and environment
 
 #%% MIN-MAX CALCULATION
 # The goal is to MINIMIZE the total mass
@@ -70,7 +62,9 @@ def Q_bare(N, D): # defining the bare surface heat loss function
     return h * A_s  * dt # heat lost by surface as a func. of fin dimensions
 
 def Q_fin(D, L): # defining the pin fin heat loss function
+    m = np.sqrt((4 * h) / (D * k))  # recalculate m based on current D and L
     mL = m * L # defining mL for simplification
+    
     # threshold for correcting overflow error - approximation of hyperbolic trig. func.
     if mL > 700:
         sinh_mL = 0.5 * np.exp(mL)
@@ -101,8 +95,10 @@ def Q_total(N, D, L): # the total heat lost from the system: both bare and fin
 
 # fin effectivness which is what we want to MAXIMIZE
 def fin_effectiveness(N, D, L):
-    mL = m * L
+    m = np.sqrt((4 * h) / (D * k))  # recalculate m based on current D and L
+    mL = m * L # defning for simplification
     
+    # threshold for correcting overflow error - approximation of hyperbolic trig. func.
     if mL > 700:
         tanh_mL = 1
     elif mL < -700:
@@ -114,11 +110,11 @@ def fin_effectiveness(N, D, L):
 
 def objective_function(ID): # what is to be MIN-MAX
     N, D, L = ID
-    return mass(N, D, L) - fin_effectiveness(N, D, L)
+    return mass(N, D, L) - fin_effectiveness(N, D, L) # a max fin_effectiveness will minimize mass
 
 def constraint_equation(ID): # the CONSTRAINT
     N, D, L = ID
-    return Q_total(N, D, L) - q
+    return Q_total(N, D, L) - q # must always = 0 to ensure Q_total always = q
 
 constraints = {'type': 'eq', 'fun': lambda ID: constraint_equation(ID)}
 
