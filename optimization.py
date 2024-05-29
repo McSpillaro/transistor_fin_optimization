@@ -51,7 +51,8 @@ def mass(N, D, L): # calculates the total mass of the aluminum fins
 def Q_bare(N, D): # calculates the heat loss of the 
     A_b = H * W # area of the bare surface of the electronic device
     A_cf = pi * (D**2 / 4) # cross-sectional area of the fin in contact with device
-    A_s = A_b - N * A_cf # total surface area exposed of the electronic device
+    A_void = 1E-4 # area of space between each fin
+    A_s = A_b - N * A_cf + A_void # total surface area exposed of the electronic device
     return h * A_s * dt
 
 def Q_fin(D, L): # the heat loss of only one fin
