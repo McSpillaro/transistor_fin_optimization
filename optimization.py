@@ -144,6 +144,6 @@ def optimize(nMAX, dMAX, lMAX):
         logging.error('Optimization failed: No feasible solution found')
         print('Optimization failed: No feasible solution found')
         
-    return print(f"\n{results[0]}\n{results[1]}\n")
+    return print(f"\n{results[0]}\n")
 
-optimize(100, None, 0.0078)
+optimize(100, None, 0.075)
