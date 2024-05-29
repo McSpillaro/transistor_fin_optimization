@@ -146,4 +146,10 @@ def optimize(nMAX, dMAX, lMAX):
         
     return print(f"\n{results[0]}\n{results[1]}\n")
 
-optimize(100, None, 0.0078)
+# max boundaries for optimization function
+fin_max_boundary = 1000
+diameter_max_boundary = None
+length_max_boundary = 2E-3
+
+# actually returns the results
+optimize(fin_max_boundary, diameter_max_boundary, length_max_boundary)
