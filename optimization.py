@@ -84,7 +84,10 @@ def fin_effectiveness(N, D, L): # how effective the fin actually is
     else:
         tanh_mL = np.tanh(mL)
         
-    return tanh_mL / m
+    effectiveness = tanh_mL / m # effectiveness of the fin spacing
+    
+    logging.info(f'Effectiveness: {effectiveness} for N={N}, D={D}, L={L}') # logging
+    return effectiveness
 
 def objective_function(ID): # function to optimize mass and fin effectiveness
     N, D, L = ID
