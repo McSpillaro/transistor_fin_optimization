@@ -151,9 +151,9 @@ def optimize(nMAX, dMAX, lMAX):
     return best_result.x # [Fins | Diameter (m) | Length (m)]]
 
 # defines the max boundaries for each parameter
-fin_max_boundary = 10000
+fin_max_boundary = 15000   
 diameter_max_boundary = None
-length_max_boundary = 0.1
+length_max_boundary = 0.008
 
 # returns the results
 results = optimize(fin_max_boundary, diameter_max_boundary, length_max_boundary)
