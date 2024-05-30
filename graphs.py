@@ -108,8 +108,8 @@ def fins_10k_diameter(D): # creating a function/equation based on regression of 
 
 plt.plot(length_values_10k, fins_10k_length(length_values_10k), label='Length') # generating lineplot for length data
 plt.plot(diameter_values_10k, fins_10k_diameter(diameter_values_10k), label='Diameter') # generating lineplot for mass data
-plt.scatter(df_1k['length'], df_1k['mass'], marker='x') # generating scatter plot from real data points on length
-plt.scatter(df_1k['diameter'], df_1k['mass'], marker='o') # generating scatter plot from real data points on diameter
+plt.scatter(df_10k['length'], df_10k['mass'], marker='x') # generating scatter plot from real data points on length
+plt.scatter(df_10k['diameter'], df_10k['mass'], marker='o') # generating scatter plot from real data points on diameter
 
 # decorating the plot
 plt.grid()
@@ -117,4 +117,24 @@ plt.legend(title='Dimension of Fin' )
 plt.xlabel('Length & Diameter (mm)')
 plt.ylabel('Mass (g)')
 plt.title('Length of Fin & Fin Diameter vs. Total Mass of Fins for 10000 Fins')
+plt.show()
+
+#%% ALL GRAPHS TOGETHER
+plt.plot(length_values, fins_500_length(length_values), label='Length (500 fins)') # generating lineplot for length data
+plt.plot(diameter_values_500, fins_500_diameter(diameter_values_500), label='Diameter (500 fins)') # generating lineplot for mass data
+
+plt.plot(length_values, fins_1k_length(length_values), label='Length (1k fins)') # generating lineplot for length data
+plt.plot(diameter_values_1k, fins_1k_diameter(diameter_values_1k), label='Diameter (1k fins)') # generating lineplot for mass data
+
+plt.plot(length_values_5k, fins_5k_length(length_values_5k), label='Length (5k fins)') # generating lineplot for length data
+plt.plot(diameter_values_5k, fins_5k_diameter(diameter_values_5k), label='Diameter (5k fins)') # generating lineplot for mass data
+
+plt.plot(length_values_10k, fins_10k_length(length_values_10k), label='Length (10k fins)') # generating lineplot for length data
+plt.plot(diameter_values_10k, fins_10k_diameter(diameter_values_10k), label='Diameter (10k fins)') # generating lineplot for mass data
+
+plt.title('Plot of All Fin Numbers of Length & Diameter vs. Mass')
+plt.xlabel('Fin Diameter & Length (mm)')
+plt.ylabel('Total Fin Mass (g)')
+plt.grid()
+plt.legend()
 plt.show()
