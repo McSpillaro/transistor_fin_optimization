@@ -1,8 +1,24 @@
 #%% IMPORTS
 from matplotlib import pyplot as plt
+import matplotlib as mpl
 import pandas as pd
 import numpy as np
 
+#%% FONTS
+title_font = {'family': 'Times New Roman',
+              'color':  'black',
+              'weight': 'bold',
+              'size': 14}
+
+label_font = {'family': 'Times New Roman',
+              'color': 'black',
+              'weight': 'normal',
+              'size': 12}
+legend_font = {'family': 'Times New Roman',
+               'size': 12}
+
+tick_font = {'family': 'Times New Roman',
+             'size': 12}
 #%% DATA
 # NOTE: length values (mm) | mass (grams) | diameter (mm)
 
@@ -47,10 +63,12 @@ plt.scatter(df_500['diameter'], df_500['mass'], marker='o') # generating scatter
 
 # decorating the plot
 plt.grid()
-plt.legend(title='Dimension of Fin' )
-plt.xlabel('Length & Diameter (mm)')
-plt.ylabel('Mass (g)')
-plt.title('Length of Fin & Fin Diameter vs. Total Mass of Fins for 500 Fins')
+plt.legend(prop=legend_font)
+plt.xlabel('Length & Diameter (mm)',fontdict=label_font)
+plt.ylabel('Mass (g)',fontdict=label_font)
+plt.title('Length of Fin & Fin Diameter vs. Total Mass of Fins for 500 Fins', fontdict=title_font)
+plt.xticks(fontsize=tick_font['size'], fontfamily=tick_font['family'])
+plt.yticks(fontsize=tick_font['size'], fontfamily=tick_font['family'])
 plt.show()
 
 #%% GRAPHS (1000 FINS)
@@ -69,10 +87,12 @@ plt.scatter(df_1k['diameter'], df_1k['mass'], marker='o') # generating scatter p
 
 # decorating the plot
 plt.grid()
-plt.legend(title='Dimension of Fin' )
-plt.xlabel('Length & Diameter (mm)')
-plt.ylabel('Mass (g)')
-plt.title('Length of Fin & Fin Diameter vs. Total Mass of Fins for 1000 Fins')
+plt.legend(prop=legend_font)
+plt.xlabel('Length & Diameter (mm)',fontdict=label_font)
+plt.ylabel('Mass (g)',fontdict=label_font)
+plt.title('Length of Fin & Fin Diameter vs. Total Mass of Fins for 1000 Fins', fontdict=title_font)
+plt.xticks(fontsize=tick_font['size'], fontfamily=tick_font['family'])
+plt.yticks(fontsize=tick_font['size'], fontfamily=tick_font['family'])
 plt.show()
 
 #%% GRAPHS (5000 FINS)
@@ -91,10 +111,12 @@ plt.scatter(df_5k['diameter'], df_5k['mass'], marker='o') # generating scatter p
 
 # decorating the plot
 plt.grid()
-plt.legend(title='Dimension of Fin' )
-plt.xlabel('Length & Diameter (mm)')
-plt.ylabel('Mass (g)')
-plt.title('Length of Fin & Fin Diameter vs. Total Mass of Fins for 5000 Fins')
+plt.legend(prop=legend_font)
+plt.xlabel('Length & Diameter (mm)',fontdict=label_font)
+plt.ylabel('Mass (g)',fontdict=label_font)
+plt.title('Length of Fin & Fin Diameter vs. Total Mass of Fins for 5000 Fins',fontdict=title_font)
+plt.xticks(fontsize=tick_font['size'], fontfamily=tick_font['family'])
+plt.yticks(fontsize=tick_font['size'], fontfamily=tick_font['family'])
 plt.show()
 
 #%% GRAPHS (10000 FINS)
@@ -113,10 +135,12 @@ plt.scatter(df_10k['diameter'], df_10k['mass'], marker='o') # generating scatter
 
 # decorating the plot
 plt.grid()
-plt.legend(title='Dimension of Fin' )
-plt.xlabel('Length & Diameter (mm)')
-plt.ylabel('Mass (g)')
-plt.title('Length of Fin & Fin Diameter vs. Total Mass of Fins for 10000 Fins')
+plt.legend(prop=legend_font)
+plt.xlabel('Length & Diameter (mm)',fontdict=label_font)
+plt.ylabel('Mass (g)',fontdict=label_font)
+plt.title('Length of Fin & Fin Diameter vs. Total Mass of Fins for 10000 Fins',fontdict=title_font)
+plt.xticks(fontsize=tick_font['size'], fontfamily=tick_font['family'])
+plt.yticks(fontsize=tick_font['size'], fontfamily=tick_font['family'])
 plt.show()
 
 #%% ALL GRAPHS TOGETHER
@@ -132,9 +156,11 @@ plt.plot(diameter_values_5k, fins_5k_diameter(diameter_values_5k), label='Diamet
 plt.plot(length_values_10k, fins_10k_length(length_values_10k), label='Length (10k fins)') # generating lineplot for length data
 plt.plot(diameter_values_10k, fins_10k_diameter(diameter_values_10k), label='Diameter (10k fins)') # generating lineplot for mass data
 
-plt.title('Plot of All Fin Numbers of Length & Diameter vs. Mass')
-plt.xlabel('Fin Diameter & Length (mm)')
-plt.ylabel('Total Fin Mass (g)')
+plt.title('Plot of All Fin Numbers of Length & Diameter vs. Mass',fontdict=title_font)
+plt.xlabel('Fin Diameter & Length (mm)',fontdict=label_font)
+plt.ylabel('Total Fin Mass (g)',fontdict=label_font)
+plt.xticks(fontsize=tick_font['size'], fontfamily=tick_font['family'])
+plt.yticks(fontsize=tick_font['size'], fontfamily=tick_font['family'])
 plt.grid()
-plt.legend()
+plt.legend(prop=legend_font)
 plt.show()
