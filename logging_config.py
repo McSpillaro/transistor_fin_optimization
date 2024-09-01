@@ -28,3 +28,4 @@ def setup_logging(base_dir='logs', log_dir='optimization_logs'):
     
     logging.info("Logging setup completed.")
     return log_file
+# %%
